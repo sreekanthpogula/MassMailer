@@ -11,9 +11,8 @@ __pycache__/
 venv/
 .env/
 .venv/
-env/
-ENV/
 .env
+ENV/
 
 # Pipenv
 Pipfile
