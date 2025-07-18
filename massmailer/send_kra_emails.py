@@ -18,22 +18,22 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-# Initialize Flask app context for Jinja2 rendering
-app = Flask(__name__)
-app.app_context().push()
+# Initialize Flask mass_mailer context for Jinja2 rendering
+mass_mailer = Flask(__name__)
+mass_mailer.app_context().push()
 
 # Flask-Mail configuration
-app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
-app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-app.config['MAIL_DEFAULT_SENDER'] = (
+mass_mailer.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+mass_mailer.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
+mass_mailer.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+mass_mailer.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+mass_mailer.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+mass_mailer.config['MAIL_DEFAULT_SENDER'] = (
     os.getenv('MAIL_DEFAULT_SENDER_NAME'),
     os.getenv('MAIL_DEFAULT_SENDER_EMAIL')
 )
 
-mail = Mail(app)
+mail = Mail(mass_mailer)
 
 # Load email template
 def load_template():
