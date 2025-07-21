@@ -72,3 +72,10 @@
 2025-07-18 14:20:58,879 - WARNING - Attempt 3 failed: SMTP AUTH extension not supported by server.
 2025-07-18 14:21:01,883 - ERROR - [FAILED] Could not send email to Sreekanth Pogula after retries.
 2025-07-18 14:21:01,883 - INFO - All emails processed.
+2025-07-21 11:29:05,991 - INFO - [DRY-RUN] Sreekanth Pogula | sreekanth.pogula@senecaglobal.com | ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com'] | Sreekanth Pogula.pdf
+2025-07-21 11:29:05,992 - INFO - All emails processed.
+2025-07-21 11:29:43,567 - WARNING - Attempt 1 failed: SMTP AUTH extension not supported by server.
+2025-07-21 11:29:51,628 - WARNING - Attempt 2 failed: SMTP AUTH extension not supported by server.
+2025-07-21 11:29:59,744 - WARNING - Attempt 3 failed: SMTP AUTH extension not supported by server.
+2025-07-21 11:30:02,750 - ERROR - [FAILED] Could not send email to Sreekanth Pogula after retries.
+2025-07-21 11:30:02,750 - INFO - All emails processed.
