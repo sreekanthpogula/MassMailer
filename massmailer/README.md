@@ -8,51 +8,39 @@ This project uses Python's `smtplib` for sending emails and supports customizabl
 
 - Send emails to multiple recipients in bulk
 - Customizable email templates using Jinja2
-- Support for attachments (PDFs)
+- Support for attachments (PDF, images, etc.)
 - Logging and error handling
 - Dry-run mode to test email sending without actually sending emails
 - Environment variable configuration for sensitive data
-- Command-line interface for easy usage
 - Support for HTML and plain text emails
 - Email validation to ensure correct recipient addresses
 
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/massmailer.git
+git clone https://github.com/sreekanthpogula/massmailer.git
 cd massmailer
 python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+source .venv/bin/activate  # On Windows use ` Source venv\Scripts\activate`
 pip install -r requirements.txt
 python script.py
 ```
 
 ## Usage
 
-1. Configure your SMTP settings in `.env`.
-2. Prepare your recipient list and email template.
-3. Run the mailer:
+1. Configure your SMTP settings in `.env` using the `.env.example` file as a reference.
+2. Prepare your recipient list and email template using the provided sample files.
+3. Place your email template in the `templates` directory and your recipient list in the `excel_files` directory.
+4. Run the application using the command:
+   ```bash
+   streamlit run app.py
+   ```
+5. Access the web interface at `http://localhost:8501` to send emails.
 
-```bash
-python script.py --dry-run
-python script.py
-```
+## Sample Files
+- **Email Template**: Place your email template in the `templates` directory. Use Jinja2 syntax for dynamic content.
+- **KRA Template**: A sample KRA Excel file is provided in the `excel_files` directory. You can download it from the web interface.
 
-## Configuration
-
-Create a `.env` file with the following:
-
-```
-MAIL_SERVER=mail_server_here
-MAIL_PORT= mail_port_here
-MAIL_USE_TLS= tls setting_here
-MAIL_USERNAME= your email_here
-MAIL_PASSWORD= your_email_password_here
-MAIL_DEFAULT_SENDER_NAME= default sender name
-MAIL_DEFAULT_SENDER_EMAIL= your sender email_here
-MAIL_DEFAULT_RECEIVER_NAME= default receiver name
-MAIL_DEFAULT_RECEIVER_EMAIL= your receiver email_here
-```
 
 ## Feature Requests
 If you have any feature requests or improvements, please open an issue on GitHub. We welcome contributions and suggestions to enhance the functionality of MassMailer.
@@ -63,14 +51,15 @@ If you have any feature requests or improvements, please open an issue on GitHub
 - Jinja2
 - python-dotenv
 - email-validator
-- argparse
 - logging
 - requests
+- streamlit (for the web interface)
+- pandas (for handling Excel files)
+- Flask (for the web server)
 
 ## Contributing
 
-Pull requests are welcome. For major changes, open an issue first to discuss what you would like to change.
+Pull requests are welcome. For major changes, open an issue first to discuss what you would like to change. See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
 ## License
-
-[MIT](LICENSE)
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
