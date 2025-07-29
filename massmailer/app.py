@@ -1,10 +1,12 @@
 import streamlit as st
 import pandas as pd
 import os
-import logging
+import time
 from flask import Flask, render_template_string
+from flask_mail import Mail, Message
 from dotenv import load_dotenv
-# from auth.auth import send_email_graph
+import logging
+import argparse
 
 # Load environment variables
 load_dotenv()
@@ -17,135 +19,238 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-# Flask app for Jinja2 rendering
+# Flask context for Jinja2 rendering
 mass_mailer = Flask(__name__)
 mass_mailer.app_context().push()
 
-# --- Email validation ---
+# Configure Flask-Mail
+mass_mailer.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+mass_mailer.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
+mass_mailer.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+mass_mailer.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+# mass_mailer.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+mass_mailer.config['MAIL_DEFAULT_SENDER'] = (
+    os.getenv('MAIL_DEFAULT_SENDER_NAME'),
+    os.getenv('MAIL_DEFAULT_SENDER_EMAIL')
+)
+
+mail = Mail(mass_mailer)
+
+# Load default HTML template
+def load_template():
+    with open('templates/email_template.html', 'r', encoding='utf-8') as f:
+        return f.read()
+
+# Validate data and return structured errors
 def validate_excel_data(df):
-    errors = []
+    error_map = {}
+
     for index, row in df.iterrows():
+        issues = []
+        row_number = index + 2
+        associate_name = str(row.get("AssociateName", "")).strip()
+        associate_id = str(row.get("AssociateID", "")).strip()
+        to_email = str(row.get("Associate Email", "")).strip()
+        cl_email = str(row.get("CL Email", "")).strip()
+        pm_email = str(row.get("PM Email", "")).strip()
+
+        if not to_email or "@senecaglobal.com" not in to_email:
+            issues.append(("Associate Email", f"Invalid Associate Email – {to_email}", to_email))
+
+        if not cl_email or "@senecaglobal.com" not in cl_email:
+            issues.append(("CL Email", f"Invalid CL Email – {cl_email}", cl_email))
+
+        if not pm_email or "@senecaglobal.com" not in pm_email:
+            issues.append(("PM Email", f"Invalid PM Email – {pm_email}", pm_email))
+
+        if "N" not in associate_id:
+            issues.append(("AssociateID", f"Invalid Associate ID – {associate_id}", associate_id))
+
+        if len(associate_name.split()) < 2:
+            issues.append(("AssociateName", f"AssociateName should be 'Firstname Lastname' – {associate_name}", associate_name))
+
+        kra_file_name = f"{associate_name}.pdf"
+        kra_path = os.path.join("kra_files", kra_file_name)
+        if not os.path.exists(kra_path):
+            issues.append(("KRA File", f"Missing KRA file for {associate_name}", ""))
+
+        if issues:
+            error_map[index] = issues
+
+    return error_map
+
+# Retry wrapper for sending email
+def send_email_with_retry(msg, retries=3, delay=3):
+    for attempt in range(1, retries + 1):
+        try:
+            mail.send(msg)
+            return True
+        except Exception as e:
+            logging.warning(f"Attempt {attempt} failed: {e}")
+            time.sleep(delay)
+    return False
+
+# Main email sending function
+def send_bulk_emails(dry_run=False, df=None, template=None):
+    logs = []
+
+    if df is None:
+        df = pd.read_excel('excel_files/KRA.xlsx')
+    if template is None:
+        template = load_template()
+
+    for _, row in df.iterrows():
         associate_name = row['AssociateName']
         to_email = row['Associate Email']
         cc_emails = [row['CL Email'], row['PM Email']]
-
-        if pd.isna(to_email) or '@' not in to_email:
-            errors.append(f"Row {index + 2}: Invalid or missing Associate Email for {associate_name}")
-
-        kra_file_name = f"{associate_name.replace(' ', ' ')}.pdf"
-        kra_path = os.path.join('kra_files', kra_file_name)
-        if not os.path.exists(kra_path):
-            errors.append(f"Row {index + 2}: Missing KRA file for {associate_name}: {kra_file_name}")
-
-    return errors
-
-# --- Email sending logic using Graph API ---
-def send_bulk_emails_graph(df, template, dry_run=False):
-    results = []
-
-    for index, row in df.iterrows():
-        associate_name = row['AssociateName']
-        to_email = row['Associate Email']
-        cc_emails = [row['CL Email'], row['PM Email']]
-        kra_file_name = f"{associate_name.replace(' ', ' ')}.pdf"
+        kra_file_name = f"{associate_name}.pdf"
         kra_path = os.path.join('kra_files', kra_file_name)
 
         if not os.path.exists(kra_path):
-            results.append(f"[SKIPPED] {associate_name} – Missing file: {kra_file_name}")
+            msg = f"Missing KRA file: {kra_path}"
+            logging.warning(msg)
+            logs.append(msg)
             continue
 
-        html_body = render_template_string(template, name=associate_name)
+        html_body = render_template_string(template, associate=associate_name)
+
+        msg = Message(
+            subject='Your KRA Document',
+            recipients=[to_email],
+            cc=cc_emails,
+            html=html_body
+        )
+        with open(kra_path, 'rb') as f:
+            msg.attach(kra_file_name, 'application/pdf', f.read())
 
         if dry_run:
-            dry_msg = f"[DRY-RUN] Would send to {associate_name} ({to_email}), CC: {cc_emails}, File: {kra_file_name}"
-            results.append(dry_msg)
-            logging.info(dry_msg)
-            continue
-
-        try:
-            success = send_email_graph(to_email, cc_emails, subject="Your KRA Document", html_body=html_body)
+            log = f"[DRY-RUN] Would send to {associate_name} ({to_email}), CC: {cc_emails}"
+            logging.info(log)
+            logs.append(log)
+        else:
+            success = send_email_with_retry(msg)
             if success:
-                success_msg = f"[SENT] Email sent to {associate_name} ({to_email})"
-                results.append(success_msg)
+                log = f"[SENT] Email sent to {associate_name} ({to_email})"
+                logging.info(log)
+                logs.append(log)
             else:
-                raise Exception("Microsoft Graph API failed.")
-        except Exception as e:
-            error_msg = f"[FAILED] {associate_name} – Error: {e}"
-            results.append(error_msg)
-            logging.error(error_msg)
+                log = f"[FAILED] Could not send email to {associate_name}"
+                logging.error(log)
+                logs.append(log)
 
-    return results
+    return logs
 
 # --- Streamlit UI ---
 st.title("📬 Mass Mailer application")
-
-# --- Template Selection ---
 st.subheader("Email Template Selection")
 
 template_options = ["Default Template"]
-uploaded_templates = st.file_uploader("Upload Custom Templates", type=["txt", "html"], accept_multiple_files=True)
-
-template_map = {
-    "Default Template": """
-<font face='Arial' size='3'>
-<body>
-Dear {{ associate }},
-<br><br>
-
-IGNORE MY EARLIER EMAIL.
-<br><br>
-
-We have defined goals and objectives for client delivery performance to achieve continual improvement and they are aligned to the key result areas (KRAs) of associates. The KRAs have been defined to improve work performance, teaming, collaboration and competence development of the associates. Please find attached a letter containing the description of KRAs applicable to you for the year 2025-26.
-<br><br>
-
-Please discuss your KRAs with your Reporting Manager and implement appropriate action plan for improving your work performance and competence. Your performance against the KRAs will be monitored by your Reporting Manager and reviewed periodically by the Associate Development Review Committee. HR department will be in touch with you and provide necessary guidance for your work performance and competency development planning, implementation, and development reviews.
-<br><br>
-
-All the best!!
-<br>
-</body>
-</font>
+template_map = {"Default Template": """
+    <font face='Arial' size='3'>
+    <body>
+    Dear {{ associate }},
+    <br><br>
+    IGNORE MY EARLIER EMAIL.
+    <br><br>
+    We have defined goals and objectives for client delivery performance to achieve continual improvement...
+    <br><br>
+    All the best!!
+    <br>
+    </body>
+    </font>
 """
 }
 
+uploaded_templates = st.file_uploader("Upload Custom Templates", type=["html", "txt"], accept_multiple_files=True)
 if uploaded_templates:
     for file in uploaded_templates:
         content = file.read().decode("utf-8")
         template_map[file.name] = content
         template_options.append(file.name)
 
+col1, col2 = st.columns(2)
+
+with col1:
+    if "Default Template" in template_map:
+        st.markdown("**Sample Email Template**")
+        st.download_button(
+            label="📥 Sample Template",
+            data=template_map["Default Template"],
+            file_name="Sample_Template.html",
+            mime="text/html"
+        )
+
+# Define file path
+kra_file_path = "massmailer/excel_files/KRA.xlsx"
+kra_map = {"Default KRA Template":"""
+AssociateID, AssociateName, PM Email, CL Email, Associate Email
+N1070, Sreekanth Pogula, sreekanth.pogula@senecaglobal.com, sreekanth.pogula@senecaglobal.com, sreekanth.pogula@senecaglobal.com
+"""}
+
+with col2:
+    if "Default KRA Template" in kra_map:
+        st.markdown("**Sample KRA Excel File**")
+        st.download_button(
+            label="📥 Sample KRA File",
+            data=kra_map["Default KRA Template"],
+            file_name="KRA.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+
+
 selected_template = st.selectbox("Choose a Template", template_options)
+template_input = st.text_area("Email HTML Template", value=template_map[selected_template], height=100)
 
-# Populate the editor with the selected template
-template_input = st.text_area("Email HTML Template", value=template_map[selected_template], height=300)
+uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 
-
-uploaded_file = st.file_uploader("Upload Excel File", type=['xlsx'])
+# Helper: highlight invalid cells
+def highlight_invalid_cells(df, error_map):
+    def apply_styles(row):
+        styles = [""] * len(row)
+        if row.name in error_map:
+            col_indices = {col: i for i, col in enumerate(df.columns)}
+            for col, _, _ in error_map[row.name]:
+                if col in col_indices:
+                    styles[col_indices[col]] = "background-color: #FFCCCC"
+        return styles
+    return df.style.apply(apply_styles, axis=1)
 
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
     st.dataframe(df)
 
-    if st.button("Dry Run", key="dry_run"):
+    if st.button("Dry Run"):
         if not template_input.strip():
             st.error("Please provide a valid email template.")
         else:
             errors = validate_excel_data(df)
             if errors:
-                st.warning("Validation Errors:")
-                st.code("\n".join(errors))
-            else:
-                dry_run_logs = send_bulk_emails_graph(df, template_input, dry_run=True)
-                st.success("Dry-run completed successfully.")
-                st.code("\n".join(dry_run_logs))
+                st.warning("Validation Errors Found:")
+                styled_df = highlight_invalid_cells(df, errors)
+                st.dataframe(styled_df)
 
-    if st.button("Send Emails", key="send_emails"):
+                for row_idx, issues in errors.items():
+                    st.markdown(f"### Row {row_idx + 2}")
+                    for col, msg, suggestion in issues:
+                        new_value = st.text_input(f"{msg}", value=suggestion, key=f"{row_idx}_{col}")
+                        if new_value.strip():
+                            df.at[row_idx, col] = new_value.strip()
+            else:
+                logs = send_bulk_emails(dry_run=True, df=df, template=template_input)
+                st.success("Dry-run completed.")
+                st.code("\n".join(logs))
+
+    if st.button("Send Emails"):
         if not template_input.strip():
             st.error("Please provide a valid email template.")
         else:
             with st.spinner("Sending emails..."):
-                results = send_bulk_emails_graph(df, template_input, dry_run=False)
-                st.success("Email sending completed.")
-                st.code("\n".join(results))
+                logs = send_bulk_emails(dry_run=False, df=df, template=template_input)
+                st.success("Emails sent.")
 
-    
+# --- CLI Support ---
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Send KRA emails")
+    parser.add_argument("--dry-run", action="store_true")
+    args = parser.parse_args()
+    send_bulk_emails(dry_run=args.dry_run)

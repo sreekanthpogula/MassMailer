@@ -29,3 +29,6 @@ streamlit
 langserve
 fastapi
 uvicorn
+streamlit
+msal
+requests
