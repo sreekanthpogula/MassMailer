@@ -1,15 +1,26 @@
-import streamlit as st
-import pandas as pd
+import smtplib
+import logging
 import os
 import time
-from flask import Flask, render_template_string
-from flask_mail import Mail, Message
-from dotenv import load_dotenv
-import logging
 import argparse
+import pandas as pd
+import streamlit as st
+from jinja2 import Template
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from dotenv import load_dotenv
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
+
+config = {
+    'MAIL_SERVER': os.getenv('MAIL_SERVER'),
+    'MAIL_PORT': int(os.getenv('MAIL_PORT', 25)),
+    'MAIL_USERNAME': os.getenv('MAIL_USERNAME'),
+    # 'MAIL_PASSWORD': os.getenv('MAIL_PASSWORD'),
+}
 
 # Logging setup
 os.makedirs("logs", exist_ok=True)
@@ -19,27 +30,18 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-# Flask context for Jinja2 rendering
-mass_mailer = Flask(__name__)
-mass_mailer.app_context().push()
-
-# Configure Flask-Mail
-mass_mailer.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-mass_mailer.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
-mass_mailer.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
-mass_mailer.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-# mass_mailer.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-mass_mailer.config['MAIL_DEFAULT_SENDER'] = (
-    os.getenv('MAIL_DEFAULT_SENDER_NAME'),
-    os.getenv('MAIL_DEFAULT_SENDER_EMAIL')
-)
-
-mail = Mail(mass_mailer)
-
 # Load default HTML template
 def load_template():
     with open('templates/email_template.html', 'r', encoding='utf-8') as f:
         return f.read()
+
+
+# Get the year range for the KRA document like "2023-24"
+def get_year_range():
+    current_year = datetime.now().year
+    next_year_short = str(current_year + 1)[-2:]  # e.g., "26"
+    return f"{current_year}-{next_year_short}"
+
 
 # Validate data and return structured errors
 def validate_excel_data(df):
@@ -79,20 +81,51 @@ def validate_excel_data(df):
 
     return error_map
 
-# Retry wrapper for sending email
-def send_email_with_retry(msg, retries=3, delay=3):
-    for attempt in range(1, retries + 1):
+
+# Send a single email with retry logic
+def send_email_with_retry(subject, to_email, cc_emails, html_body, attachment_path, config, retries=1, delay=0.5):
+    for attempt in range(1, retries + 2):
         try:
-            mail.send(msg)
+            msg = MIMEMultipart()
+            msg['From'] = config['MAIL_USERNAME']
+            msg['To'] = to_email
+            msg['Cc'] = ", ".join(cc_emails)
+            msg['Subject'] = subject
+
+            msg.attach(MIMEText(html_body, 'html'))
+
+            if os.path.exists(attachment_path):
+                with open(attachment_path, 'rb') as f:
+                    part = MIMEApplication(f.read(), _subtype='pdf')
+                    part.add_header('Content-Disposition', 'attachment', filename=os.path.basename(attachment_path))
+                    msg.attach(part)
+                    
+
+            smtp_server = smtplib.SMTP(config['MAIL_SERVER'], int(config['MAIL_PORT']))
+            
+            # smtp_server.login(config['MAIL_USERNAME'], config['MAIL_PASSWORD'])
+            smtp_server.sendmail(
+                from_addr=config['MAIL_USERNAME'],
+                to_addrs=[to_email] + cc_emails,
+                msg=msg.as_string()
+            )
+            smtp_server.quit()
             return True
+
         except Exception as e:
-            logging.warning(f"Attempt {attempt} failed: {e}")
+            logging.warning(f"Attempt {attempt} failed for {to_email}: {e}")
             time.sleep(delay)
+
     return False
 
-# Main email sending function
+
 def send_bulk_emails(dry_run=False, df=None, template=None):
     logs = []
+
+    # Check for missing config
+    for key, val in config.items():
+        if not val:
+            raise ValueError(f"Missing email config: {key} is not set in .env")
 
     if df is None:
         df = pd.read_excel('excel_files/KRA.xlsx')
@@ -100,43 +133,37 @@ def send_bulk_emails(dry_run=False, df=None, template=None):
         template = load_template()
 
     for _, row in df.iterrows():
-        associate_name = row['AssociateName']
-        to_email = row['Associate Email']
-        cc_emails = [row['CL Email'], row['PM Email']]
+        associate_name = row.get("AssociateName", "").strip()
+        to_email = row.get("Associate Email", "").strip()
+        cc_emails = [row.get("CL Email", "").strip(), row.get("PM Email", "").strip()]
         kra_file_name = f"{associate_name}.pdf"
         kra_path = os.path.join('kra_files', kra_file_name)
 
-        if not os.path.exists(kra_path):
-            msg = f"Missing KRA file: {kra_path}"
-            logging.warning(msg)
-            logs.append(msg)
-            continue
-
-        html_body = render_template_string(template, associate=associate_name)
-
-        msg = Message(
-            subject='Your KRA Document',
-            recipients=[to_email],
-            cc=cc_emails,
-            html=html_body
-        )
-        with open(kra_path, 'rb') as f:
-            msg.attach(kra_file_name, 'application/pdf', f.read())
+        # Render HTML using Jinja2
+        html_body = Template(template).render(associate=associate_name, year_range=get_year_range())
 
         if dry_run:
-            log = f"[DRY-RUN] Would send to {associate_name} ({to_email}), CC: {cc_emails}"
+            log = f"[DRY-RUN] Able to send to {associate_name} with {to_email} | CC: {cc_emails}"
             logging.info(log)
             logs.append(log)
+            continue
+
+        success = send_email_with_retry(
+            subject='Your KRA Document',
+            to_email=to_email,
+            cc_emails=cc_emails,
+            html_body=html_body,
+            attachment_path=kra_path,
+            config=config
+        )
+
+        if success:
+            log = f"[SENT] Email sent to {associate_name} with {to_email} | CC: {cc_emails}"
+            logging.info(log)
         else:
-            success = send_email_with_retry(msg)
-            if success:
-                log = f"[SENT] Email sent to {associate_name} ({to_email})"
-                logging.info(log)
-                logs.append(log)
-            else:
-                log = f"[FAILED] Could not send email to {associate_name}"
-                logging.error(log)
-                logs.append(log)
+            log = f"[FAILED] Could not send email to {associate_name} with {to_email}"
+            logging.error(log)
+        logs.append(log)
 
     return logs
 
@@ -146,18 +173,24 @@ st.subheader("Email Template Selection")
 
 template_options = ["Default Template"]
 template_map = {"Default Template": """
-    <font face='Arial' size='3'>
-    <body>
-    Dear {{ associate }},
-    <br><br>
-    IGNORE MY EARLIER EMAIL.
-    <br><br>
-    We have defined goals and objectives for client delivery performance to achieve continual improvement...
-    <br><br>
-    All the best!!
-    <br>
-    </body>
-    </font>
+<font face="Arial" size="3">
+<body>
+Dear {{ associate }},
+<BR><BR>
+
+IGNORE MY EARLIER EMAIL.
+<BR><BR>
+
+We have defined goals and objectives for client delivery performance to achieve continual improvement and they are aligned to the key result areas (KRAs) of associates. The KRAs have been defined to improve work performance, teaming, collaboration and competence development of the associates. Please find attached a letter containing the description of KRAs applicable to you for the year 2025-26.
+<BR><BR>
+
+Please discuss your KRAs with your Reporting Manager and implement appropriate action plan for improving your work performance and competence. Your performance against the KRAs will be monitored by your Reporting Manager and reviewed periodically by the Associate Development Review Committee. HR department will be in touch with you and provide necessary guidance for your work performance and competency development planning, implementation, and development reviews.
+<BR><BR>
+
+All the best!!
+<BR>
+</body>
+</font>
 """
 }
 
@@ -249,8 +282,8 @@ if uploaded_file:
                 st.success("Emails sent.")
 
 # --- CLI Support ---
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Send KRA emails")
-    parser.add_argument("--dry-run", action="store_true")
-    args = parser.parse_args()
-    send_bulk_emails(dry_run=args.dry_run)
+# if __name__ == "__main__":
+#     parser = argparse.ArgumentParser(description="Send KRA emails")
+#     parser.add_argument("--dry-run", action="store_true")
+#     args = parser.parse_args()
+#     send_bulk_emails(dry_run=args.dry_run)

@@ -59,7 +59,7 @@ If you have any feature requests or improvements, please open an issue on GitHub
 
 ## Contributing
 
-Pull requests are welcome. For major changes, open an issue first to discuss what you would like to change. See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
+Pull requests are welcome. For major changes, open an issue first to discuss what you would like to change.
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
