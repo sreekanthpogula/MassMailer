@@ -41,3 +41,48 @@
 2025-08-06 10:41:51,884 - ERROR - [FAILED] Could not send email to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com
 2025-08-06 11:03:53,284 - INFO - [DRY-RUN] Able to send to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
 2025-08-06 11:04:04,010 - INFO - [SENT] Email sent to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 11:18:09,492 - INFO - [SENT] Email sent to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 11:18:15,712 - INFO - [SENT] Email sent to Bhargavi Gottumukkala with bhargavi.gottumukkala@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 11:18:21,950 - INFO - [SENT] Email sent to Harnath Immani with harnath.immani@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 11:18:28,192 - INFO - [SENT] Email sent to Jawahar Prudhivi with jawahar.prudhivi@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 11:18:34,440 - INFO - [SENT] Email sent to Manisha Siram with manisha.siram@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 11:18:40,638 - INFO - [SENT] Email sent to Nandini Yerrapothu with nandini.yerrapothu@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 11:18:46,830 - INFO - [SENT] Email sent to Prakash Chandra with prakash.chandra@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 11:18:53,033 - INFO - [SENT] Email sent to Ramesh Gidde with ramesh.gidde@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 11:18:59,220 - INFO - [SENT] Email sent to Sabiha Sultana with sabiha.sultana@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 11:19:05,418 - INFO - [SENT] Email sent to Shravani Deshpande with shravani.deshpande@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 11:19:11,629 - INFO - [SENT] Email sent to Yagnabhargavi Penumacha with yagnabhargavi.penumacha@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:33:03,895 - INFO - Loading faiss.
+2025-08-06 12:33:04,260 - INFO - Successfully loaded faiss.
+2025-08-06 12:33:04,264 - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-08-06 12:39:12,823 - INFO - Loading faiss.
+2025-08-06 12:39:12,834 - INFO - Successfully loaded faiss.
+2025-08-06 12:39:12,837 - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-08-06 12:40:14,287 - INFO - Loading faiss.
+2025-08-06 12:40:14,307 - INFO - Successfully loaded faiss.
+2025-08-06 12:40:14,312 - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-08-06 12:43:56,218 - INFO - Loading faiss.
+2025-08-06 12:43:56,233 - INFO - Successfully loaded faiss.
+2025-08-06 12:43:56,236 - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-08-06 12:59:05,237 - INFO - [DRY-RUN] Able to send to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:05,239 - INFO - [DRY-RUN] Able to send to Bhargavi Gottumukkala with bhargavi.gottumukkala@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:05,240 - INFO - [DRY-RUN] Able to send to Harnath Immani with harnath.immani@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:05,241 - INFO - [DRY-RUN] Able to send to Jawahar Prudhivi with jawahar.prudhivi@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:05,241 - INFO - [DRY-RUN] Able to send to Anusha Kodi with anusha.kodi@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:05,242 - INFO - [DRY-RUN] Able to send to Nandini Yerrapothu with nandini.yerrapothu@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:05,243 - INFO - [DRY-RUN] Able to send to Prakash Chandra with prakash.chandra@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:05,244 - INFO - [DRY-RUN] Able to send to Ramesh Gidde with ramesh.gidde@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:05,245 - INFO - [DRY-RUN] Able to send to Sabiha Sultana with sabiha.sultana@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:05,245 - INFO - [DRY-RUN] Able to send to Shravani Deshpande with shravani.deshpande@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:05,246 - INFO - [DRY-RUN] Able to send to Yagnabhargavi Penumacha with yagnabhargavi.penumacha@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:14,670 - INFO - [SENT] Email sent to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:20,913 - INFO - [SENT] Email sent to Bhargavi Gottumukkala with bhargavi.gottumukkala@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:27,158 - INFO - [SENT] Email sent to Harnath Immani with harnath.immani@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:33,372 - INFO - [SENT] Email sent to Jawahar Prudhivi with jawahar.prudhivi@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:39,587 - INFO - [SENT] Email sent to Anusha Kodi with anusha.kodi@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:45,946 - INFO - [SENT] Email sent to Nandini Yerrapothu with nandini.yerrapothu@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:52,247 - INFO - [SENT] Email sent to Prakash Chandra with prakash.chandra@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 12:59:58,474 - INFO - [SENT] Email sent to Ramesh Gidde with ramesh.gidde@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 13:00:04,740 - INFO - [SENT] Email sent to Sabiha Sultana with sabiha.sultana@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 13:00:11,293 - INFO - [SENT] Email sent to Shravani Deshpande with shravani.deshpande@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-06 13:00:18,565 - INFO - [SENT] Email sent to Yagnabhargavi Penumacha with yagnabhargavi.penumacha@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
