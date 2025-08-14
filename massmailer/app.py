@@ -1,6 +1,7 @@
 import smtplib
 import logging
 import os
+import glob
 import time
 import pandas as pd
 import streamlit as st
@@ -12,15 +13,11 @@ from dotenv import load_dotenv
 from datetime import datetime
 
 # LLM imports
-from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains import RetrievalQA
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFDirectoryLoader
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
 from langchain_community.llms import ollama
 
 # Load environment variables
@@ -30,7 +27,6 @@ config = {
     'MAIL_SERVER': os.getenv('MAIL_SERVER'),
     'MAIL_PORT': int(os.getenv('MAIL_PORT', 25)),
     'MAIL_USERNAME': os.getenv('MAIL_USERNAME'),
-    # 'MAIL_PASSWORD': os.getenv('MAIL_PASSWORD'),
 }
 
 # Logging setup
@@ -83,7 +79,7 @@ def validate_excel_data(df):
             issues.append(("AssociateName", f"AssociateName should be 'Firstname Lastname' – {associate_name}", associate_name))
 
         kra_file_name = f"{associate_name}.pdf"
-        kra_path = os.path.join("kra_files", kra_file_name)
+        kra_path = os.path.join(".temp/kra_files/pdf_files", kra_file_name)
         if not os.path.exists(kra_path):
             issues.append(("KRA File", f"Missing KRA file for {associate_name}", ""))
 
@@ -148,7 +144,7 @@ def send_bulk_emails(dry_run=False, df=None, template=None):
         to_email = row.get("Associate Email", "").strip()
         cc_emails = [row.get("CL Email", "").strip(), row.get("PM Email", "").strip()]
         kra_file_name = f"{associate_name}.pdf"
-        kra_path = os.path.join('kra_files', kra_file_name)
+        kra_path = os.path.join('.temp/kra_files/pdf_files', kra_file_name)
 
         # Render HTML using Jinja2
         html_body = Template(template).render(associate=associate_name, year_range=get_year_range())
@@ -206,45 +202,46 @@ All the best!!
 """
 }
 
-uploaded_templates = st.file_uploader("Upload Custom Templates", type=["html", "txt"], accept_multiple_files=True)
-if uploaded_templates:
-    for file in uploaded_templates:
-        content = file.read().decode("utf-8")
-        template_map[file.name] = content
-        template_options.append(file.name)
+# uploaded_templates = st.file_uploader("Upload Custom Templates", type=["html", "txt"], accept_multiple_files=True)
+# if uploaded_templates:
+#     for file in uploaded_templates:
+#         content = file.read().decode("utf-8")
+#         template_map[file.name] = content
+#         template_options.append(file.name)
 
-col1, col2 = st.columns(2)
+# col1, col2 = st.columns(2)
 
-with col1:
-    if "Default Template" in template_map:
-        st.markdown("**Sample Email Template**")
-        st.download_button(
-            label="📥 Sample Template",
-            data=template_map["Default Template"],
-            file_name="Sample_Template.html",
-            mime="text/html"
-        )
+# with col1:
+#     if "Default Template" in template_map:
+#         st.markdown("**Sample Email Template**")
+#         st.download_button(
+#             label="📥 Sample Template",
+#             data=template_map["Default Template"],
+#             file_name="Sample_Template.html",
+#             mime="text/html"
+#         )
 
 # Define file path
-kra_file_path = "massmailer/excel_files/KRA.xlsx"
-kra_map = {"Default KRA Template":"""
-AssociateID, AssociateName, PM Email, CL Email, Associate Email
-N1070, Sreekanth Pogula, sreekanth.pogula@senecaglobal.com, sreekanth.pogula@senecaglobal.com, sreekanth.pogula@senecaglobal.com
-"""}
+# kra_file_path = "massmailer/excel_files/KRA.xlsx"
+# kra_map = {"Default KRA Template":"""
+# AssociateID, AssociateName, PM Email, CL Email, Associate Email
+# N1070, Sreekanth Pogula, sreekanth.pogula@senecaglobal.com, sreekanth.pogula@senecaglobal.com, sreekanth.pogula@senecaglobal.com
+# """}
 
-with col2:
-    if "Default KRA Template" in kra_map:
-        st.markdown("**Sample KRA Excel File**")
-        st.download_button(
-            label="📥 Sample KRA File",
-            data=kra_map["Default KRA Template"],
-            file_name="KRA.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+# with col2:
+#     if "Default KRA Template" in kra_map:
+#         st.markdown("**Sample KRA Excel File**")
+#         st.download_button(
+#             label="📥 Sample KRA File",
+#             data=kra_map["Default KRA Template"],
+#             file_name="KRA.xlsx",
+#             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+#             )
 
 
-selected_template = st.selectbox("Choose a Template", template_options)
-template_input = st.text_area("Email HTML Template", value=template_map[selected_template], height=100)
+# selected_template = st.selectbox("Choose a Template", template_options)
+selected_template = template_options[0]
+template_input = st.text_area("Email HTML Template", value=template_map[selected_template], height=300)
 
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 
@@ -294,6 +291,72 @@ if uploaded_file:
                 st.success("Emails sent.")
 
 
+os.makedirs(".temp/kra_files/pdf_files", exist_ok=True)
+
+st.subheader("📎 Upload KRA PDF Files")
+uploaded_pdfs = st.file_uploader(
+    "Upload KRA PDF files",
+    type=["pdf"],
+    accept_multiple_files=True
+)
+
+if uploaded_pdfs:
+    skipped_files = []
+
+    for file in uploaded_pdfs:
+        save_path = os.path.join(".temp/kra_files/pdf_files", file.name)
+
+        if os.path.exists(save_path):
+            skipped_files.append(file.name)
+        else:
+            with open(save_path, "wb") as f:
+                f.write(file.read())
+
+    if skipped_files:
+        st.warning(f"⚠️ Skipped duplicates: {', '.join(skipped_files)}")
+    
+    added_files = [file.name for file in uploaded_pdfs if file.name not in skipped_files]
+    if added_files:
+        st.success(f"✅ Uploaded: {', '.join(added_files)}")
+
+
+# st.subheader("📂 Current KRA Files in '.temp/kra_files/'")
+
+# pdf_files = sorted(glob.glob(".temp/kra_files/*.pdf"))
+
+# if pdf_files:
+#     for pdf_file in pdf_files:
+#         filename = os.path.basename(pdf_file)
+#         file_stats = os.stat(pdf_file)
+#         file_size_kb = round(file_stats.st_size / 1024, 2)
+#         file_modified = datetime.fromtimestamp(file_stats.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+
+#         with st.expander(f"📄 {filename}"):
+#             st.markdown(f"**Size:** {file_size_kb} KB")
+#             st.markdown(f"**Last Modified:** {file_modified}")
+
+#             # Download button
+#             with open(pdf_file, "rb") as f:
+#                 st.download_button(
+#                     label="⬇️ Download PDF",
+#                     data=f,
+#                     file_name=filename,
+#                     mime="application/pdf"
+#                 )
+
+#             # Optional PDF preview
+#             st.markdown("**Preview:**")
+#             st.pdf(pdf_file) if hasattr(st, "pdf") else st.info("PDF preview not supported in this Streamlit version.")
+
+#             # Delete button
+#             if st.button(f"🗑️ Delete {filename}", key=f"delete_{filename}"):
+#                 os.remove(pdf_file)
+#                 st.success(f"Deleted {filename}")
+#                 st.experimental_rerun()
+# else:
+#     st.info("No KRA PDF files found.")
+
+
 # --- LLM Configuration with RetrievalQA ---
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
@@ -339,19 +402,19 @@ def ask_bot(question):
         return f"Error: {e}"
 
 
-# --- Sidebar UI ---
-st.sidebar.title("Mass Mailer Assistant")
-st.sidebar.markdown("Ask questions about the Mass Mailer application or get help with email templates.")
-
-with st.sidebar.expander("💬 Ask the Assistant", expanded=False):
-    user_input = st.chat_input("Ask something...")
-
-if user_input:
-    st.session_state.chat_history.append({"role": "user", "content": user_input})
-    st.sidebar.chat_message("user").markdown(user_input)
-
-    with st.spinner("Assistant is thinking..."):
-        response = ask_bot(user_input)
-
-    st.session_state.chat_history.append({"role": "assistant", "content": response})
-    st.sidebar.chat_message("assistant").markdown(response)
+# # --- Sidebar UI ---
+# st.sidebar.title("Mass Mailer Assistant")
+# st.sidebar.markdown("Ask questions about the Mass Mailer application or get help with email templates.")
+#
+# with st.sidebar.expander("💬 Ask the Assistant", expanded=False):
+#     user_input = st.chat_input("Ask something...")
+#
+# if user_input:
+#     st.session_state.chat_history.append({"role": "user", "content": user_input})
+#     st.sidebar.chat_message("user").markdown(user_input)
+#
+#     with st.spinner("Assistant is thinking..."):
+#         response = ask_bot(user_input)
+#
+#     st.session_state.chat_history.append({"role": "assistant", "content": response})
+#     st.sidebar.chat_message("assistant").markdown(response)
