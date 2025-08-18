@@ -79,7 +79,7 @@ def validate_excel_data(df):
             issues.append(("AssociateName", f"AssociateName should be 'Firstname Lastname' – {associate_name}", associate_name))
 
         kra_file_name = f"{associate_name}.pdf"
-        kra_path = os.path.join(".temp/kra_files/pdf_files", kra_file_name)
+        kra_path = os.path.join(".temp/pdf_files", kra_file_name)
         if not os.path.exists(kra_path):
             issues.append(("KRA File", f"Missing KRA file for {associate_name}", ""))
 
@@ -144,7 +144,7 @@ def send_bulk_emails(dry_run=False, df=None, template=None):
         to_email = row.get("Associate Email", "").strip()
         cc_emails = [row.get("CL Email", "").strip(), row.get("PM Email", "").strip()]
         kra_file_name = f"{associate_name}.pdf"
-        kra_path = os.path.join('.temp/kra_files/pdf_files', kra_file_name)
+        kra_path = os.path.join('.temp/pdf_files', kra_file_name)
 
         # Render HTML using Jinja2
         html_body = Template(template).render(associate=associate_name, year_range=get_year_range())
@@ -243,8 +243,8 @@ All the best!!
 selected_template = template_options[0]
 template_input = st.text_area("Email HTML Template", value=template_map[selected_template], height=300)
 
-os.makedirs(".temp/kra_files/pdf_files", exist_ok=True)
-os.makedirs(".temp/kra_files/excel_files", exist_ok=True)
+os.makedirs(".temp/pdf_files", exist_ok=True)
+os.makedirs(".temp/excel_files", exist_ok=True)
 
 
 st.subheader("📤 Upload Files to Attach to the email")
@@ -266,9 +266,9 @@ if uploaded_pdfs:
 
         # Route to correct folder
         if ext == "pdf":
-            save_dir = ".temp/kra_files/pdf_files"
+            save_dir = ".temp/pdf_files"
         elif ext == "xlsx":
-            save_dir = ".temp/kra_files/excel_files"
+            save_dir = ".temp/excel_files"
         else:
             st.error(f"❌ Unsupported file type: {file.name}")
             continue
@@ -307,14 +307,21 @@ def highlight_invalid_cells(df, error_map):
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
     st.dataframe(df)
+    
+    errors = validate_excel_data(df)
+
+    # Track if Dry Run has been executed
+    if "dry_run_done" not in st.session_state:
+        st.session_state.dry_run_done = False
 
     if st.button("Dry Run"):
+        st.session_state.dry_run_done = True
         if not template_input.strip():
             st.error("Please provide a valid email template.")
         else:
             errors = validate_excel_data(df)
             if errors:
-                st.warning("Validation Errors Found:")
+                st.warning("Validation Errors Found in the uploaded excel file:")
                 styled_df = highlight_invalid_cells(df, errors)
                 st.dataframe(styled_df)
 
@@ -329,19 +336,23 @@ if uploaded_file:
                 st.success("Dry-run completed.")
                 st.code("\n".join(logs))
 
-    if st.button("Send Emails"):
-        if not template_input.strip():
-            st.error("Please provide a valid email template.")
+# Show "Send Emails" button ONLY if no validation errors
+    if st.session_state.dry_run_done:
+        if not errors:
+            if st.button("Send Emails"):
+                if not template_input.strip():
+                    st.error("Please provide a valid email template.")
+                else:
+                    with st.spinner("Sending emails..."):
+                        logs = send_bulk_emails(dry_run=False, df=df, template=template_input)
+                        st.success("Emails sent.")
         else:
-            with st.spinner("Sending emails..."):
-                logs = send_bulk_emails(dry_run=False, df=df, template=template_input)
-                st.success("Emails sent.")
+            st.info("❌ Fix validation errors before sending emails.")
 
 
+# st.subheader("📂 Current KRA Files in '.temp/pdf_files/'")
 
-# st.subheader("📂 Current KRA Files in '.temp/kra_files/'")
-
-# pdf_files = sorted(glob.glob(".temp/kra_files/*.pdf"))
+# pdf_files = sorted(glob.glob(".temp/pdf_files/*.pdf"))
 
 # if pdf_files:
 #     for pdf_file in pdf_files:

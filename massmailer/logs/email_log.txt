@@ -153,3 +153,8 @@
 2025-08-18 11:11:05,184 - INFO - [DRY-RUN] Able to send to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
 2025-08-18 11:11:28,231 - INFO - [SENT] Email sent to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
 2025-08-18 11:45:07,212 - INFO - [SENT] Email sent to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-18 14:08:09,921 - INFO - [DRY-RUN] Able to send to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-18 14:08:17,468 - INFO - [SENT] Email sent to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-18 14:11:15,965 - INFO - [SENT] Email sent to Sreekanth Pogula with sreekanth.pogula@gmail.com | CC: ['sreekanth.pogula@gmail.com', 'sreekanth.pogula@gmail.com']
+2025-08-18 14:21:25,670 - INFO - [DRY-RUN] Able to send to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-18 14:21:34,069 - INFO - [SENT] Email sent to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
