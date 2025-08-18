@@ -139,3 +139,16 @@
 2025-08-14 12:34:16,154 - INFO - [DRY-RUN] Able to send to Sabiha Sultana with sabiha.sultana@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
 2025-08-14 12:34:16,154 - INFO - [DRY-RUN] Able to send to Shravani Deshpande with shravani.deshpande@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
 2025-08-14 12:34:16,155 - INFO - [DRY-RUN] Able to send to Yagnabhargavi Penumacha with yagnabhargavi.penumacha@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-18 10:16:42,577 - INFO - Loading faiss.
+2025-08-18 10:16:42,729 - INFO - Successfully loaded faiss.
+2025-08-18 10:16:42,737 - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-08-18 10:18:09,865 - INFO - [DRY-RUN] Able to send to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-18 10:18:48,655 - INFO - [SENT] Email sent to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-18 10:37:32,344 - INFO - [DRY-RUN] Able to send to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-18 10:37:40,601 - INFO - [SENT] Email sent to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-18 10:54:14,419 - INFO - [DRY-RUN] Able to send to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-18 10:54:25,733 - INFO - [SENT] Email sent to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-18 11:02:18,013 - INFO - [DRY-RUN] Able to send to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-18 11:02:28,252 - INFO - [SENT] Email sent to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-18 11:11:05,184 - INFO - [DRY-RUN] Able to send to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']
+2025-08-18 11:11:28,231 - INFO - [SENT] Email sent to Sreekanth Pogula with sreekanth.pogula@senecaglobal.com | CC: ['sreekanth.pogula@senecaglobal.com', 'sreekanth.pogula@senecaglobal.com']

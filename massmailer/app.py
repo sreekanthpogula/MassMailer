@@ -177,7 +177,7 @@ def send_bulk_emails(dry_run=False, df=None, template=None):
 
 # --- Streamlit UI ---
 st.title("📬 Mass Mailer application")
-st.subheader("Email Template Selection")
+st.subheader("Add Email Template")
 
 template_options = ["Default Template"]
 template_map = {"Default Template": """
@@ -243,7 +243,54 @@ All the best!!
 selected_template = template_options[0]
 template_input = st.text_area("Email HTML Template", value=template_map[selected_template], height=300)
 
+os.makedirs(".temp/kra_files/pdf_files", exist_ok=True)
+os.makedirs(".temp/kra_files/excel_files", exist_ok=True)
+
+
+st.subheader("📤 Upload Files to Attach to the email")
+# Custom helper text
+# st.info("👉 File name format: **Firstname Lastname.pdf**")
+uploaded_pdfs = st.file_uploader(
+    "Upload KRA PDF files ",
+    type=["pdf", "xlsx"],
+    accept_multiple_files=True,
+)
+
+
+if uploaded_pdfs:
+    skipped_files = []
+    added_files = []
+
+    for file in uploaded_pdfs:
+        ext = file.name.split(".")[-1].lower()
+
+        # Route to correct folder
+        if ext == "pdf":
+            save_dir = ".temp/kra_files/pdf_files"
+        elif ext == "xlsx":
+            save_dir = ".temp/kra_files/excel_files"
+        else:
+            st.error(f"❌ Unsupported file type: {file.name}")
+            continue
+
+        save_path = os.path.join(save_dir, file.name)
+
+        if os.path.exists(save_path):
+            skipped_files.append(file.name)
+        else:
+            with open(save_path, "wb") as f:
+                f.write(file.read())
+            added_files.append(file.name)
+
+    # Feedback to user
+    if skipped_files:
+        st.warning(f"⚠️ Skipped duplicates: {', '.join(skipped_files)}")
+    if added_files:
+        st.success(f"✅ Uploaded: {', '.join(added_files)}")
+
+st.subheader("📤 Upload Excel File to Trigger Emails")
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
+# st.info("👉 File name format: **KRA.xlsx**")
 
 # Helper: highlight invalid cells
 def highlight_invalid_cells(df, error_map):
@@ -291,34 +338,6 @@ if uploaded_file:
                 st.success("Emails sent.")
 
 
-os.makedirs(".temp/kra_files/pdf_files", exist_ok=True)
-
-st.subheader("📎 Upload KRA PDF Files")
-uploaded_pdfs = st.file_uploader(
-    "Upload KRA PDF files",
-    type=["pdf"],
-    accept_multiple_files=True
-)
-
-if uploaded_pdfs:
-    skipped_files = []
-
-    for file in uploaded_pdfs:
-        save_path = os.path.join(".temp/kra_files/pdf_files", file.name)
-
-        if os.path.exists(save_path):
-            skipped_files.append(file.name)
-        else:
-            with open(save_path, "wb") as f:
-                f.write(file.read())
-
-    if skipped_files:
-        st.warning(f"⚠️ Skipped duplicates: {', '.join(skipped_files)}")
-    
-    added_files = [file.name for file in uploaded_pdfs if file.name not in skipped_files]
-    if added_files:
-        st.success(f"✅ Uploaded: {', '.join(added_files)}")
-
 
 # st.subheader("📂 Current KRA Files in '.temp/kra_files/'")
 
@@ -355,66 +374,3 @@ if uploaded_pdfs:
 #                 st.experimental_rerun()
 # else:
 #     st.info("No KRA PDF files found.")
-
-
-# --- LLM Configuration with RetrievalQA ---
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-
-    # Vector Store Setup
-    st.session_state.embeddings = OllamaEmbeddings(model="nomic-embed-text")
-    st.session_state.loader = PyPDFDirectoryLoader("./data")
-    st.session_state.docs = st.session_state.loader.load()
-    st.session_state.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    st.session_state.final_documents = st.session_state.text_splitter.split_documents(st.session_state.docs[:1])
-    st.session_state.vectors = FAISS.from_documents(
-        st.session_state.final_documents,
-        st.session_state.embeddings
-    )
-
-    # Create Retriever from FAISS
-    st.session_state.retriever = st.session_state.vectors.as_retriever(search_kwargs={"k": 3})
-
-    # Define LLM
-    st.session_state.llm = ollama.Ollama(model="gemma3", temperature=0.7)
-
-    # Define RetrievalQA chain
-    st.session_state.qa_chain = RetrievalQA.from_chain_type(
-        llm=st.session_state.llm,
-        retriever=st.session_state.retriever,
-        return_source_documents=True
-    )
-
-# --- Function to ask the assistant ---
-def ask_bot(question):
-    try:
-        result = st.session_state.qa_chain.invoke({"query": question})
-        answer = result["result"]
-        # sources = result.get("source_documents", [])
-
-        # # Format the sources nicely
-        # if sources:
-        #     source_texts = "\n\n".join(f"🔹 **Source {i+1}:**\n{doc.page_content.strip()}" for i, doc in enumerate(sources))
-        #     answer += "\n\n---\n**Context from documents:**\n" + source_texts
-
-        return answer
-    except Exception as e:
-        return f"Error: {e}"
-
-
-# # --- Sidebar UI ---
-# st.sidebar.title("Mass Mailer Assistant")
-# st.sidebar.markdown("Ask questions about the Mass Mailer application or get help with email templates.")
-#
-# with st.sidebar.expander("💬 Ask the Assistant", expanded=False):
-#     user_input = st.chat_input("Ask something...")
-#
-# if user_input:
-#     st.session_state.chat_history.append({"role": "user", "content": user_input})
-#     st.sidebar.chat_message("user").markdown(user_input)
-#
-#     with st.spinner("Assistant is thinking..."):
-#         response = ask_bot(user_input)
-#
-#     st.session_state.chat_history.append({"role": "assistant", "content": response})
-#     st.sidebar.chat_message("assistant").markdown(response)
