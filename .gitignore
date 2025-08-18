@@ -77,4 +77,7 @@ dmypy.json
 
 # Logs
 *.log
+
+# Temp folders
+.temp/
 ```
